@@ -5,6 +5,13 @@ ID:204747283
 Beaglebone Sensors
 
 File Descriptions
-README -
-Makefile -
-lab4b.c - 
+README - File that contains descriptions of each file in the project's folder and research/citation
+Makefile - Contains targets to make, make for dist, clean, and check
+lab4b.c - Contains the C source code that implements this project specification on a BeagleBone Board
+
+Notes
+I completed this project with my button connect to port GPIO_51 and my temperature sensor A1/A0.
+
+Research/Citations
+The sources used to complete this project are all referenced on the project specification or distributed during
+duscussion section. 
