@@ -1,0 +1,42 @@
+NAME: Kyle Romero
+EMAIL: kyleromero98@gmail.com
+ID: 204747283
+
+Project 0 - README
+
+INCLUDED FILES
+lab0.c - a C source file that contains the code that follows the specification for project 0
+Makefile - allows for making, cleaning, making for distribution, and running some smoke tests
+backtrace.png - a screenshot that shows a segfault and associated backtrace using GDB to debug the program
+breakpoint.png - a screenshot that shows a breakpoint with variable inspection
+README - this file that provides usefule information regarding my submission for this project
+
+SMOKE-TEST CASES
+#1 - Checks for the functionality of --input and --output by comparing input to output file
+#2 - Checks for segfault and successful catch by --catch by comparing the output of the program to a test file
+#3 - Checks for invalid input file (hllo.txt) and makes sure that we get an error regarding this by comparing to test file
+#4 - Checks for an invalid option passed to the program; compares to a test file to ensure we get proper error message
+#5 - Checks for an output file that we do not have proper permissions (write syscall fails); compares to a test file to ensure that we get proper error message
+
+OTHER INFORMATION
+For any detected error that was not explicitly addressed in the specification I opted to return exit code 5 instead of reusing one
+of the exit codes that was explicitly assigned to in the specification.
+
+CITATIONS/RESEARCH SOURCES
+
+MAKEFILE
+For reference in creating a Makefile:
+Professor Eggerts's Makefile for Assignment 8 of CS35L
+
+LAB0.C
+For understanding getopt_long and some examples:
+https://linux.die.net/man/3/getopt_long
+https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Options.html
+https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html
+http://www.informit.com/articles/article.aspx?p=175771&seqNum=3
+
+For fprintf Reference:
+https://www.tutorialspoint.com/c_standard_library/c_function_fprintf.htm
+
+For signal(2) Example:
+http://www.csl.mtu.edu/cs4411.ck/www/NOTES/signal/install.html

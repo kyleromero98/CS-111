@@ -1,0 +1,40 @@
+NAME: Kyle Romero
+EMAIL: kyleromero98@gmail.com
+ID: 204747283
+
+Project 0 - README
+
+INCLUDED FILES
+lab0.c - a C source file that contains the code that follows the specification for project 0
+Makefile - allows for making, cleaning, making for distribution, and running some smoke tests
+backtrace.png - a screenshot that shows a segfault and associated backtrace using GDB to debug the program
+breakpoint.png - a screenshot that shows a breakpoint with variable inspection
+README - this file that provides usefule information regarding my submission for this project
+
+SMOKE-TEST CASES
+#1 -
+
+#2 -
+
+#3 -
+
+#4 - 
+
+CITATIONS/RESEARCH SOURCES
+
+MAKEFILE
+For reference in creating a Makefile:
+Professor Eggerts's Makefile for Assignment 8 of CS35L
+
+LAB0.C
+For understanding getopt_long and some examples:
+https://linux.die.net/man/3/getopt_long
+https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Options.html
+https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html
+http://www.informit.com/articles/article.aspx?p=175771&seqNum=3
+
+For fprintf Reference:
+https://www.tutorialspoint.com/c_standard_library/c_function_fprintf.htm
+
+For signal(2) Example:
+http://www.csl.mtu.edu/cs4411.ck/www/NOTES/signal/install.html
