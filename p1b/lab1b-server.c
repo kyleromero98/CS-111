@@ -125,16 +125,27 @@ void inf (char* src, uLong* src_len, char* dest, uLong* dest_len) {
 
 void flushBuffer(int fromFd, int toFd) {
   char buf[BUFSIZE];
+  char outBuf[(BUFSIZE*2)+1];
   int bytesRead;
-  char crlf[2] = {0x0D, 0x0A};
   while ((bytesRead = read(fromFd, buf, BUFSIZE)) > 0) {
+    memset(outBuf, 0, (BUFSIZE * 2) + 1);
     for (int i = 0; i < bytesRead; i++) {
       if (buf[i] == 0x0A) {
-	writeBytes(toFd, crlf, 2);
+	outBuf[strlen(outBuf)] = 0x0D;
+	outBuf[strlen(outBuf)] = 0x0A;
       } else {
-	writeBytes(toFd, &buf[i], 1);
+	outBuf[strlen(outBuf)] = buf[i];
       }
     }
+    if (compressFlag) {
+      char sentCompress[(BUFSIZE * 2) + 1];
+      uLong length = (BUFSIZE * 2) + 1;
+      memset(sentCompress, 0, (BUFSIZE * 2) + 1);
+      def(outBuf, length, sentCompress, &length);
+      memset(outBuf, 0, (BUFSIZE * 2) + 1);
+      strcpy(outBuf, sentCompress);
+    }
+    writeBytes(toFd, outBuf, (BUFSIZE * 2) + 1);
   }
   if (bytesRead < 0) {
     fprintf(stderr, "I/O Error: Unable to read from client, %s\n\r", strerror(errno));

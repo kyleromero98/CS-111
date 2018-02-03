@@ -217,7 +217,7 @@ int main (int argc, char** argv) {
   int logFd;
   // setup log file
   if (logFile != NULL) {
-    if ((logFd = open(logFile, O_WRONLY | O_CREAT, 00666)) == -1) {
+    if ((logFd = open(logFile, O_WRONLY | O_CREAT | O_TRUNC, 00666)) == -1) {
       fprintf(stderr, "I/O Error: Unable to open %s, %s", logFile, strerror(errno));
       exit(1);
     }
@@ -269,30 +269,29 @@ int main (int argc, char** argv) {
 	    if (buf[i] == 0x0D || buf[i] == 0x0A) {
 	      writeBytes(STDOUT, crlf, 2);
 	      sendBuf[strlen(sendBuf)] = buf[i];
-	      // compression specified
-	      if (compressFlag) {
-		char sendCompress[BUFSIZE];
-		uLong length = BUFSIZE;
-		memset(sendCompress, 0, BUFSIZE);
-		def(sendBuf, BUFSIZE, sendCompress, &length);
-		strcpy(sendBuf, sendCompress);
-	      }
-	      // send to socket
-	      writeBytes(socketFd, sendBuf, strlen(sendBuf));
-	      
-	      if (debugFlag) {
-		fprintf(stderr, "SENT %d bytes: %s\n\r", (int)strlen(sendBuf), sendBuf);
-	      }
-	      
-	      if (logFile != NULL) {
-		dprintf(logFd, "SENT %d bytes: %s\n", (int)strlen(sendBuf), sendBuf);
-	      }	      
-	      memset(sendBuf, 0, BUFSIZE);
 	    } else {
 	      writeBytes(STDOUT, &buf[i], 1);
 	      sendBuf[strlen(sendBuf)] = buf[i];
 	    }
 	  }
+	  // compression
+	  if (compressFlag) {
+	    char sendCompress[BUFSIZE];
+	    uLong length = BUFSIZE;
+	    memset(sendCompress, 0, BUFSIZE);
+	    def(sendBuf, BUFSIZE, sendCompress, &length);
+	    strcpy(sendBuf, sendCompress);
+	  }
+	  writeBytes(socketFd, sendBuf, strlen(sendBuf));
+
+	  if (debugFlag) {
+	    fprintf(stderr, "SENT %d bytes: %s\n\r", (int)strlen(sendBuf), sendBuf);
+	  }
+	  
+	  if (logFile != NULL) {
+	    dprintf(logFd, "SENT %d bytes: %s\n", (int)strlen(sendBuf), sendBuf);
+	  }
+	  memset(sendBuf, 0, BUFSIZE);
 	} else {
 	  exit(0);
 	}

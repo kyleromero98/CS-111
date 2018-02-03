@@ -1,0 +1,10 @@
+SENT 1 bytes: e
+SENT 1 bytes: c
+SENT 1 bytes: h
+SENT 1 bytes: o
+SENT 1 bytes:  
+SENT 1 bytes: h
+SENT 2 bytes: i
+RECEIVED 4 bytes: hi
+
+SENT 1 bytes: 

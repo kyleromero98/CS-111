@@ -1,0 +1,15 @@
+NAME: Kyle Romero
+EMAIL: kyleromero98@gmail.com
+ID: 204747283
+
+Project 4A - Beaglebone Bring-Up
+
+S/N: BBGW17080018
+MAC: 2CF7F1066912
+
+Description of Files
+my_beaglebone.jpg - Picture of me holding my Beaglebone
+connected.png - Picture showing new name for board and ifconfig output
+copy.png - Successful scp from local machine and corresponding ls output on board
+build_run.png - Successful build of hello world program and running
+git.png - Successful git installation and cloning of my private CS-111 repo on GitHub
