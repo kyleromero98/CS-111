@@ -1,0 +1,72 @@
+NAME: Kyle Romero
+EMAIL: kyleromero98@gmail.com
+ID: 204747283
+
+Project 2A - Races and Synchronization
+
+Contents - Note: Some of these statements were taken directly from the project specification
+lab2_add.c - the C source file that implements and tests a shared variable add function, produces command line output, and test results
+SortedList.h - the C header file for a doubly linked list
+SortedList.c - the C implementation file for a doubly linked list
+lab2_list.c - the C source file that implements and tests the shared data structure list, produces command line output, and test results
+Makefile - the Makefile with targets for building, doing tests, making graphs, and building for distribution
+lab2_add.csv -	the output data for my tests with the add portion of this lab
+lab2_list.csv - the output data for my tests with the list portion of this lab
+lab2_add-1.png - threads and iterations required to generate a failure (with and without yields)
+lab2_add-2.png - average time per operation with and without yields
+lab2_add-3.png - average time per (single threaded) operation vs. the number of iterations
+lab2_add-4.png - threads and iterations that can run successfully with yields under each of the synchronization options
+lab2_add-5.png - average time per (protected) operation vs. the number of threads
+lab2_list-1.png - average time per (single threaded) unprotected operation vs. number of iterations (illustrating the correction of the per-operation cost for the list length)
+lab2_list-2.png - threads and iterations required to generate a failure (with and without yields)
+lab2_list-3.png - iterations that can run (protected) without failure
+lab2_list-4.png - (length-adjusted) cost per operation vs the number of threads for the various synchronization options
+README - contains information regarding the contents of the TAR for this project, the answers to the lab questions, and some notes on research/citations
+lab2_add.gp - a script which generates the graphs for the add portion of this lab
+lab2_list.gp - a script which generates the graphs for the list portion of this lab
+
+Questions
+2.1.1 - It takes a lot of iterations before errors are seen because the possibility of having a collision between two threads inside of the critical section of code is actually very unlikely. Therefore, we need to
+perform a lot of iterations before we see a lot of collisions. A significantly smaller number of iterations doesn't fail often because it just so happens that none of those executing threads preempt each other
+inside of the critical section. As stated before, the probability of a collision is relatively small so if you don't have a very large sample space it is likely to see very few collisions. That being said,
+a race condition does exist in this code because there is a shared counter and so any number of iterations for any number of threads greater than 1 has the possibility of producing incorrect results.
+
+2.1.2 - The yield calls cause the currently running thread to yield to the scheduler and allow another thread to run. The yield calls are significantly slower because this increases the number of context switches
+between threads that the process must perform. If --yield is enabled then every thread may be preempted when it hits the sched_yield() function call and therefore a context switch is likely performed. The time is
+lost to saving the state of the currently running thread, restoring the state of the next running thread, and other operations associated with context switching.
+
+It is not possible to get valid per-operation timings using the --yield operation. This is because the total time of the running process will be saturated with the time spent performing context switches. Therefore,
+the "per-operation timing" will be much higher than it actually is because so much extra time was spent performing this preemptive scheduling.
+
+2.1.3 - The overhead required to create and initialize all of the threads is included in the total time. If the number of iterations is low, then this overhead will represent a larger chunk of our total time. However,
+if we increase the number of iterations, then this overhead will represent a smaller portition of the total time and the average time per operation will decrease.
+
+As we increase the number of iterations towards infinity, we can find what the average cost per iteration approaches. This happens because the overhead cost per iteration decreases as the number of iterations increases.
+Therefore, as the number of iterations approaches infinity, the overhead cost per iteration is approaching zero and we are left with the "correct" cost per iteration.
+
+2.1.4 - All of the options perform similarly for low numbers of threads because there is less time spent waiting per thread and the total time is less dependent on whether we are using a lock and/or the type of lock that
+we are using. For example, if we have just two threads, then the second thread will only have to wait for the first thread to finish before it can continue. However, if we have 32 threads, a given thread may have to wait for
+31 other threads to run before it can run again.
+
+The three protected operations slow down as the number of threads rises for the reason mentioned above, a thread may end up having to wait a long time to acquire a lock or a mutex if there is a lot of competition for that
+lock. This can result in a bottleneck where only one thread can make progress at a time and increases to the total time of the process.
+
+2.2.1 - During the first part of this lab, the average time per operation decreases in rate of increase as you run with more and more threads. The same trend can be see in the second part of this lab, however we have more
+of a linear trend than in the first part. In both cases, the average time per operation begins to plateau as you use more threads. This makes sense since mutexes are slightly more efficient than spin locks since you
+put the thread to sleep rather than spinning.
+
+2.2.2 - Over time, spin locks grow exceedingly more inefficient compared to mutexes because we waste a lot of cycle spinning and waiting. The slope for spin locks is increasing significantly and crosses the line for mutexes.
+This makes sense because spin locks will grow much more inefficiently than mutexes. In summary, the cost per operation diverges when using spin locks and plateaus better when using mutexes.
+
+Sources/Citations
+The following were used as examples in writing the code for this project.
+
+Clock Example
+https://www.cs.rutgers.edu/~pxk/416/notes/c-tutorials/gettime.html
+
+pthread example/tutorial
+http://timmurphy.org/2010/05/04/pthreads-in-c-a-minimal-working-example/
+https://computing.llnl.gov/tutorials/pthreads/
+
+Linked List Reference
+http://www.sanfoundry.com/c-program-implement-singly-linked-list/
