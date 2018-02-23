@@ -1,0 +1,316 @@
+Total: 951 samples
+     820  86.2%  86.2%      951 100.0% manipulateThreads
+      92   9.7%  95.9%       92   9.7% __strcmp_sse42
+      18   1.9%  97.8%       18   1.9% 0x00007ffeb09986c2
+      12   1.3%  99.1%       59   6.2% SortedList_lookup
+       7   0.7%  99.8%       54   5.7% SortedList_insert
+       2   0.2% 100.0%        2   0.2% _init
+       0   0.0% 100.0%       18   1.9% __GI___clock_gettime
+       0   0.0% 100.0%      951 100.0% __clone
+       0   0.0% 100.0%      951 100.0% start_thread
+ROUTINE ====================== manipulateThreads in /u/cs/ugrad/romero/111/p2b/lab2_list.c
+   820    951 Total samples (flat / cumulative)
+     .      .   75:   long long elapsed = (end->tv_sec - start->tv_sec) * 1000000000;
+     .      .   76:   elapsed += (end->tv_nsec - start->tv_nsec); 
+     .      .   77:   return elapsed;
+     .      .   78: }
+     .      .   79: 
+---
+     .      .   80: void* manipulateThreads (void *threadId) {
+     .      .   81:   struct timespec start, end;
+     .      .   82:   int tid = (*(int*)threadId);
+     .      .   83:   SortedList_t *currList = NULL;
+     .      .   84: 
+     .      .   85:   // insert into list
+     .      .   86:   for (int i = tid; i < totalIterations; i += numThreads) {
+     .      .   87:     int listId = hash(initElems[i].key) % numLists;
+     .      .   88:     currList = &lists[listId];
+     .      .   89:     switch(syncArg) {
+     .      .   90:     case 'm':
+     .      .   91:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .   92:       pthread_mutex_lock(&mutexes[listId]);
+     .      .   93:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .   94:       waitTimes[tid] += timeDiff(&start, &end);
+     .      .   95:       
+     .      .   96:       SortedList_insert(currList, &initElems[i]);
+     .      .   97:       pthread_mutex_unlock(&mutexes[listId]);
+     .      .   98:       break;
+     .      .   99:     case 's':
+     .      6  100:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+   495    495  101:       while(__sync_lock_test_and_set(&spinlocks[listId], 1));
+     .      1  102:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  103:       waitTimes[tid] +=	timeDiff(&start, &end);
+     .      .  104:       
+     .     54  105:       SortedList_insert(currList, &initElems[i]);
+     .      .  106:       __sync_lock_release(&spinlocks[listId]);
+     .      .  107:       break;
+     .      .  108:     default:
+     .      .  109:       SortedList_insert(currList, &initElems[i]);
+     .      .  110:       break;
+     .      .  111:     }
+     .      .  112:   }
+     .      .  113: 
+     .      .  114:   int currListLength = 0;
+     .      .  115:   // get list length
+     .      .  116:   switch (syncArg) {
+     .      .  117:   case 'm':
+     .      .  118:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .  119:     for (int i = 0; i < numLists; i++)
+     .      .  120:       pthread_mutex_lock(&mutexes[i]);
+     .      .  121:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  122:     waitTimes[tid] += timeDiff(&start, &end);
+     .      .  123:     for (int i = 0; i < numLists; i++) {
+     .      .  124:       currListLength = SortedList_length(&lists[i]);
+     .      .  125:       if (currListLength < 0) {
+     .      .  126: 	fprintf(stderr, "Corruption Detected: Post-element insertion, call to SortedList_length failed with value %d\n", currListLength);
+     .      .  127: 	exit(2);
+     .      .  128:       }
+     .      .  129:       totalLength += currListLength;
+     .      .  130:     }
+     .      .  131:     for (int i = 0; i < numLists; i++)
+     .      .  132:       pthread_mutex_unlock(&mutexes[i]);
+     .      .  133:     break;
+     .      .  134:   case 's':
+     .      .  135:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .  136:     for (int i = 0; i < numLists; i++)
+     .      .  137:       while(__sync_lock_test_and_set(&spinlocks[i], 1));
+     .      .  138:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  139:     waitTimes[tid] += timeDiff(&start, &end);
+     .      .  140:     
+     .      .  141:     for (int i = 0; i < numLists; i++) {
+     .      .  142:       currListLength = SortedList_length(&lists[i]);
+     .      .  143:       if (currListLength < 0) {
+     .      .  144: 	fprintf(stderr, "Corruption Detected: Post-element insertion, call to SortedList_length failed with value %d\n", currListLength);
+     .      .  145: 	exit(2);
+     .      .  146:       }
+     .      .  147:       totalLength += currListLength;
+     .      .  148:     }
+     .      .  149:     for (int i = 0; i < numLists; i++)
+     .      .  150:       __sync_lock_release(&spinlocks[i]);
+     .      .  151:     break;
+     .      .  152:   default:
+     .      .  153:     for (int i = 0; i < numLists; i++) {
+     .      .  154:       currListLength = SortedList_length(&lists[i]);
+     .      .  155:       if (currListLength < 0) {
+     .      .  156:         fprintf(stderr, "Corruption Detected: Post-element insertion, call to SortedList_length failed with value %d\n", currListLength);
+     .      .  157:         exit(2);
+     .      .  158:       }
+     .      .  159:       totalLength += currListLength;
+     .      .  160:     }
+     .      .  161:     break;
+     .      .  162:   }
+     .      .  163: 
+     .      .  164:   SortedListElement_t *temp;
+     .      .  165:   int listId = 0;
+     .      .  166:   for (int i = tid; i < totalIterations; i += numThreads) {
+     .      .  167:     listId = hash(initElems[i].key) % numLists;
+     .      .  168:     currList = &lists[listId];
+     .      .  169:     switch(syncArg) {
+     .      .  170:     case 'm':
+     .      .  171:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .  172:       pthread_mutex_lock(&mutexes[listId]);
+     .      .  173:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  174:       waitTimes[tid] += timeDiff(&start, &end);
+     .      .  175:     
+     .      .  176:       temp = SortedList_lookup(currList, initElems[i].key);
+     .      .  177:       if (temp == NULL) {
+     .      .  178: 	fprintf(stderr, "Corrupt List: Unable to find key that was inserted\n");
+     .      .  179: 	exit(2);
+     .      .  180:       }
+     .      .  181:       if (SortedList_delete(temp)) {
+     .      .  182: 	fprintf(stderr, "Corrupt List: delete failed\n");
+     .      .  183: 	exit(2);
+     .      .  184:       }
+     .      .  185:       pthread_mutex_unlock(&mutexes[listId]);
+     .      .  186:       break;
+     .      .  187:     case 's':
+     .      3  188:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+   325    325  189:       while(__sync_lock_test_and_set(&spinlocks[listId], 1));
+     .      8  190:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  191:       waitTimes[tid] += timeDiff(&start, &end);
+     .      .  192:       
+     .     59  193:       temp = SortedList_lookup(currList, initElems[i].key);
+     .      .  194:       if (temp == NULL) {
+     .      .  195: 	fprintf(stderr, "Corrupt List: Unable to find key that was inserted\n");
+     .      .  196: 	exit(2);
+     .      .  197:       }
+     .      .  198:       if (SortedList_delete(temp)) {
+     .      .  199: 	fprintf(stderr, "Corrupt List: delete failed\n");
+     .      .  200: 	exit(2);
+     .      .  201:       }
+     .      .  202:       __sync_lock_release(&spinlocks[listId]);
+     .      .  203:       break;
+     .      .  204:     default:
+     .      .  205:       temp = SortedList_lookup(currList, initElems[i].key);
+     .      .  206:       if (temp == NULL) {
+     .      .  207: 	fprintf(stderr, "Corrupt List: Unable to find key that was inserted\n");
+     .      .  208: 	exit(2);
+     .      .  209:       }
+     .      .  210:       if (SortedList_delete(temp)) {
+     .      .  211: 	fprintf(stderr, "Corrupt List: delete failed\n");
+     .      .  212: 	exit(2);
+     .      .  213:       }
+     .      .  214:       break;
+     .      .  215:     }
+     .      .  216:   }
+     .      .  217:   return NULL;
+     .      .  218: }
+---
+     .      .  219: 
+     .      .  220: void sighandler() {
+     .      .  221:   fprintf(stderr, "SIGSEGV Error: Segmentation fault detected\n");
+     .      .  222:   exit(2);
+     .      .  223: }
+ROUTINE ====================== manipulateThreads in /u/cs/ugrad/romero/111/p2b/lab2_list.c
+   820    951 Total samples (flat / cumulative)
+     .      .   75:   long long elapsed = (end->tv_sec - start->tv_sec) * 1000000000;
+     .      .   76:   elapsed += (end->tv_nsec - start->tv_nsec); 
+     .      .   77:   return elapsed;
+     .      .   78: }
+     .      .   79: 
+---
+     .      .   80: void* manipulateThreads (void *threadId) {
+     .      .   81:   struct timespec start, end;
+     .      .   82:   int tid = (*(int*)threadId);
+     .      .   83:   SortedList_t *currList = NULL;
+     .      .   84: 
+     .      .   85:   // insert into list
+     .      .   86:   for (int i = tid; i < totalIterations; i += numThreads) {
+     .      .   87:     int listId = hash(initElems[i].key) % numLists;
+     .      .   88:     currList = &lists[listId];
+     .      .   89:     switch(syncArg) {
+     .      .   90:     case 'm':
+     .      .   91:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .   92:       pthread_mutex_lock(&mutexes[listId]);
+     .      .   93:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .   94:       waitTimes[tid] += timeDiff(&start, &end);
+     .      .   95:       
+     .      .   96:       SortedList_insert(currList, &initElems[i]);
+     .      .   97:       pthread_mutex_unlock(&mutexes[listId]);
+     .      .   98:       break;
+     .      .   99:     case 's':
+     .      6  100:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+   495    495  101:       while(__sync_lock_test_and_set(&spinlocks[listId], 1));
+     .      1  102:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  103:       waitTimes[tid] +=	timeDiff(&start, &end);
+     .      .  104:       
+     .     54  105:       SortedList_insert(currList, &initElems[i]);
+     .      .  106:       __sync_lock_release(&spinlocks[listId]);
+     .      .  107:       break;
+     .      .  108:     default:
+     .      .  109:       SortedList_insert(currList, &initElems[i]);
+     .      .  110:       break;
+     .      .  111:     }
+     .      .  112:   }
+     .      .  113: 
+     .      .  114:   int currListLength = 0;
+     .      .  115:   // get list length
+     .      .  116:   switch (syncArg) {
+     .      .  117:   case 'm':
+     .      .  118:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .  119:     for (int i = 0; i < numLists; i++)
+     .      .  120:       pthread_mutex_lock(&mutexes[i]);
+     .      .  121:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  122:     waitTimes[tid] += timeDiff(&start, &end);
+     .      .  123:     for (int i = 0; i < numLists; i++) {
+     .      .  124:       currListLength = SortedList_length(&lists[i]);
+     .      .  125:       if (currListLength < 0) {
+     .      .  126: 	fprintf(stderr, "Corruption Detected: Post-element insertion, call to SortedList_length failed with value %d\n", currListLength);
+     .      .  127: 	exit(2);
+     .      .  128:       }
+     .      .  129:       totalLength += currListLength;
+     .      .  130:     }
+     .      .  131:     for (int i = 0; i < numLists; i++)
+     .      .  132:       pthread_mutex_unlock(&mutexes[i]);
+     .      .  133:     break;
+     .      .  134:   case 's':
+     .      .  135:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .  136:     for (int i = 0; i < numLists; i++)
+     .      .  137:       while(__sync_lock_test_and_set(&spinlocks[i], 1));
+     .      .  138:     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  139:     waitTimes[tid] += timeDiff(&start, &end);
+     .      .  140:     
+     .      .  141:     for (int i = 0; i < numLists; i++) {
+     .      .  142:       currListLength = SortedList_length(&lists[i]);
+     .      .  143:       if (currListLength < 0) {
+     .      .  144: 	fprintf(stderr, "Corruption Detected: Post-element insertion, call to SortedList_length failed with value %d\n", currListLength);
+     .      .  145: 	exit(2);
+     .      .  146:       }
+     .      .  147:       totalLength += currListLength;
+     .      .  148:     }
+     .      .  149:     for (int i = 0; i < numLists; i++)
+     .      .  150:       __sync_lock_release(&spinlocks[i]);
+     .      .  151:     break;
+     .      .  152:   default:
+     .      .  153:     for (int i = 0; i < numLists; i++) {
+     .      .  154:       currListLength = SortedList_length(&lists[i]);
+     .      .  155:       if (currListLength < 0) {
+     .      .  156:         fprintf(stderr, "Corruption Detected: Post-element insertion, call to SortedList_length failed with value %d\n", currListLength);
+     .      .  157:         exit(2);
+     .      .  158:       }
+     .      .  159:       totalLength += currListLength;
+     .      .  160:     }
+     .      .  161:     break;
+     .      .  162:   }
+     .      .  163: 
+     .      .  164:   SortedListElement_t *temp;
+     .      .  165:   int listId = 0;
+     .      .  166:   for (int i = tid; i < totalIterations; i += numThreads) {
+     .      .  167:     listId = hash(initElems[i].key) % numLists;
+     .      .  168:     currList = &lists[listId];
+     .      .  169:     switch(syncArg) {
+     .      .  170:     case 'm':
+     .      .  171:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+     .      .  172:       pthread_mutex_lock(&mutexes[listId]);
+     .      .  173:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  174:       waitTimes[tid] += timeDiff(&start, &end);
+     .      .  175:     
+     .      .  176:       temp = SortedList_lookup(currList, initElems[i].key);
+     .      .  177:       if (temp == NULL) {
+     .      .  178: 	fprintf(stderr, "Corrupt List: Unable to find key that was inserted\n");
+     .      .  179: 	exit(2);
+     .      .  180:       }
+     .      .  181:       if (SortedList_delete(temp)) {
+     .      .  182: 	fprintf(stderr, "Corrupt List: delete failed\n");
+     .      .  183: 	exit(2);
+     .      .  184:       }
+     .      .  185:       pthread_mutex_unlock(&mutexes[listId]);
+     .      .  186:       break;
+     .      .  187:     case 's':
+     .      3  188:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
+   325    325  189:       while(__sync_lock_test_and_set(&spinlocks[listId], 1));
+     .      8  190:       clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+     .      .  191:       waitTimes[tid] += timeDiff(&start, &end);
+     .      .  192:       
+     .     59  193:       temp = SortedList_lookup(currList, initElems[i].key);
+     .      .  194:       if (temp == NULL) {
+     .      .  195: 	fprintf(stderr, "Corrupt List: Unable to find key that was inserted\n");
+     .      .  196: 	exit(2);
+     .      .  197:       }
+     .      .  198:       if (SortedList_delete(temp)) {
+     .      .  199: 	fprintf(stderr, "Corrupt List: delete failed\n");
+     .      .  200: 	exit(2);
+     .      .  201:       }
+     .      .  202:       __sync_lock_release(&spinlocks[listId]);
+     .      .  203:       break;
+     .      .  204:     default:
+     .      .  205:       temp = SortedList_lookup(currList, initElems[i].key);
+     .      .  206:       if (temp == NULL) {
+     .      .  207: 	fprintf(stderr, "Corrupt List: Unable to find key that was inserted\n");
+     .      .  208: 	exit(2);
+     .      .  209:       }
+     .      .  210:       if (SortedList_delete(temp)) {
+     .      .  211: 	fprintf(stderr, "Corrupt List: delete failed\n");
+     .      .  212: 	exit(2);
+     .      .  213:       }
+     .      .  214:       break;
+     .      .  215:     }
+     .      .  216:   }
+     .      .  217:   return NULL;
+     .      .  218: }
+---
+     .      .  219: 
+     .      .  220: void sighandler() {
+     .      .  221:   fprintf(stderr, "SIGSEGV Error: Segmentation fault detected\n");
+     .      .  222:   exit(2);
+     .      .  223: }
