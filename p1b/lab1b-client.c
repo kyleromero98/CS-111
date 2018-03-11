@@ -245,6 +245,8 @@ int main (int argc, char** argv) {
   polldata[1].revents = 0;
   
   int pollStatus = 0;
+
+  fprintf(stderr, "Polling...\n");
   
   while (1) {
     int bytesRead;
@@ -273,7 +275,7 @@ int main (int argc, char** argv) {
 	      writeBytes(STDOUT, &buf[i], 1);
 	      sendBuf[strlen(sendBuf)] = buf[i];
 	    }
-	  }
+	  } z
 	  // compression
 	  if (compressFlag) {
 	    char sendCompress[BUFSIZE];

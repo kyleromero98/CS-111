@@ -1,0 +1,19 @@
+NAME: Jair Hinojosa, Kyle Romero
+EMAIL: JairHD011@gmail.com, kyleromero98@gmail.com
+ID: 904771873, 204747283
+
+lab3a.c:
+Contains all the source code for the lab. The code makes extensive use of a provided
+header file, ext2_fs.h, which contains various structs and types to handle the
+ext2 file system. Each part of the spec is handled by a distinct function ranging
+from handling the superblock to handling the indirect blocks.
+
+Makefile:
+This contains the make targets that were specified in the spec. The default
+make target just goes ahead and builds the project using the -o and -g flags.
+The 'dist' make target creates the tar ball with all the required files (source, 
+header file, the makefile, the README). The 'clean' make target deletes the
+executable for a clean build.
+
+README:
+Contains descrptive information about the project files.

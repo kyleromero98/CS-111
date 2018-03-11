@@ -1,0 +1,18 @@
+NAME:Kyle Romero
+EMAIL:kyleromero98@gmail.com
+ID:204747283
+
+Project 4C - Internet of Things Security
+
+File Descriptions
+README - File that contains descriptions of each file in the project's folder and research/citation
+Makefile - Contains targets to make, make for dist, clean
+lab4c_tcp.c - Contains the C source code that implements the TCP portion of this project, derived from project 4B
+lab4c_tls.c - Contains the C source code that implements the TLS portion of this project, derived from lab4c_tcp.c
+
+Notes
+I completed this project with my temperature sensor connected to A1/A0.
+
+Research/Citations
+The sources used to complete this project are all referenced on the project specification or distributed during
+discussion section.
